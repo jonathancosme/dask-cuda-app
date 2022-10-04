@@ -1,0 +1,4 @@
+name, pci.sub_device_id, index
+NVIDIA GeForce RTX 3090, 0x87AF1043, 0
+NVIDIA GeForce RTX 3060 Ti, 0x663019DA, 1
+NVIDIA GeForce RTX 3090, 0x161319DA, 2

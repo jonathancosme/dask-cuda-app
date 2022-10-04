@@ -1,0 +1,32 @@
+It’s common to rely on the device indexing presented by nvidia-smi when creating workers, and that is the default in Dask-CUDA. In most cases, nvidia-smi provides a one-to-one mapping with CUDA_VISIBLE_DEVICES, but in some systems the ordering may not match. While, CUDA_VISIBLE_DEVICES indexes GPUs by their PCI Bus ID, nvidia-smi orders by fastest GPUs. Issues are commonly seen in DGX Station A100 that contains 4 A100 GPUs, plus a Display GPU, but the Display GPU may not be the last GPU according to the PCI Bus ID. To correct that and ensure the mapping according to the PCI Bus ID, it’s necessary to set the CUDA_DEVICE_ORDER=PCI_BUS_ID environment variable when starting the Python process:
+
+CUDA_DEVICE_ORDER=PCI_BUS_ID python
+CUDA_DEVICE_ORDER=PCI_BUS_ID ipython
+CUDA_DEVICE_ORDER=PCI_BUS_ID jupyter lab
+CUDA_DEVICE_ORDER=PCI_BUS_ID dask-cuda-worker ...
+
+A local cluster can now be started with LocalCUDACluster(protocol="ucx"), implying automatic UCX transport selection (UCX_TLS=all). Starting a cluster separately – scheduler, workers and client as different processes – is also possible, as long as Dask scheduler is created with dask-scheduler --protocol="ucx" and connecting a dask-cuda-worker to the scheduler will imply automatic UCX transport selection, but that requires the Dask scheduler and client to be started with DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT=True. See Enabling UCX communication for more details examples of UCX usage with automatic configuration.
+
+
+Thus, if encountering problems remember that it is always possible to use unproxy() to access the proxied object directly, or set DASK_JIT_UNSPILL_COMPATIBILITY_MODE=True to enable compatibility mode, which automatically calls unproxy() on all function inputs.
+
+Scheduler
+For automatic UCX configuration, we must ensure a CUDA context is created on the scheduler before UCX is initialized. This can be satisfied by specifying the DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT=True environment variable when creating the scheduler.
+
+To start a Dask scheduler using UCX with automatic configuration and one GB of RMM pool:
+$ DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT=True \
+> DASK_DISTRIBUTED__RMM__POOL_SIZE=1GB \
+> dask-scheduler --protocol ucx --interface ib0
+
+DASK_DISTRIBUTED__COMM__UCX__TCP=True 
+
+import os
+
+os.environ["UCX_MEMTYPE_REG_WHOLE_ALLOC_TYPES"] = "cuda"
+os.environ["DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT"] = "True"
+
+from dask.distributed import Client
+
+client = Client("ucx://<scheduler_address>:8786")
+
+We specify UCX_MEMTYPE_REG_WHOLE_ALLOC_TYPES=cuda above for optimal performance with InfiniBand, see details here. If not using InfiniBand, that option may be omitted. In UCX 1.12 and newer, that option is default and may be omitted as well even when using InfiniBand.

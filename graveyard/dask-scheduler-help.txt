@@ -1,0 +1,31 @@
+Usage: dask-scheduler [OPTIONS] [PRELOAD_ARGV]...
+
+Options:
+  --host TEXT                   URI, IP or hostname of this server
+  --port INTEGER                Serving port
+  --interface TEXT              Preferred network interface like 'eth0' or
+                                'ib0'
+  --protocol TEXT               Protocol like tcp, tls, or ucx
+  --tls-ca-file PATH            CA cert(s) file for TLS (in PEM format)
+  --tls-cert PATH               certificate file for TLS (in PEM format)
+  --tls-key PATH                private key file for TLS (in PEM format)
+  --bokeh-port INTEGER          Deprecated.  See --dashboard-address
+  --dashboard-address TEXT      Address on which to listen for diagnostics
+                                dashboard  [default: :8787]
+  --dashboard / --no-dashboard  Launch the Dashboard [default: --dashboard]
+  --bokeh / --no-bokeh          Deprecated.  See --dashboard/--no-dashboard.
+  --show / --no-show            Show web UI [default: --show]
+  --dashboard-prefix TEXT       Prefix for the dashboard app
+  --use-xheaders BOOLEAN        User xheaders in dashboard app for ssl
+                                termination in header  [default: False]
+  --pid-file TEXT               File to write the process PID
+  --scheduler-file TEXT         File to write connection information. This may
+                                be a good way to share connection information
+                                if your cluster is on a shared network file
+                                system.
+  --preload TEXT                Module that should be loaded by the scheduler
+                                process  like "foo.bar" or "/path/to/foo.py".
+  --idle-timeout TEXT           Time of inactivity after which to kill the
+                                scheduler
+  --version                     Show the version and exit.
+  --help                        Show this message and exit.

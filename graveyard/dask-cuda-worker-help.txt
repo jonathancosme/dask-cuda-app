@@ -1,0 +1,172 @@
+Usage: dask-cuda-worker [OPTIONS] [SCHEDULER] [PRELOAD_ARGV]...
+
+Options:
+  --host TEXT                     IP address of serving host; should be
+                                  visible to the scheduler and other workers.
+                                  Can be a string (like ``"127.0.0.1"``) or
+                                  ``None`` to fall back on the address of the
+                                  interface specified by ``--interface`` or
+                                  the default interface.
+  --nthreads INTEGER              Number of threads to be used for each Dask
+                                  worker process.  [default: 1]
+  --name TEXT                     A unique name for the worker. Can be a
+                                  string (like ``"worker-1"``) or ``None`` for
+                                  a nameless worker.
+  --memory-limit TEXT             Bytes of memory per process that the worker
+                                  can use. Can be an integer (bytes), float
+                                  (fraction of total system memory), string
+                                  (like ``"5GB"`` or ``"5000M"``), or
+                                  ``"auto"`` or 0 for no memory management.
+                                  [default: auto]
+  --device-memory-limit TEXT      Size of the CUDA device LRU cache, which is
+                                  used to determine when the worker starts
+                                  spilling to host memory. Can be an integer
+                                  (bytes), float (fraction of total device
+                                  memory), string (like ``"5GB"`` or
+                                  ``"5000M"``), or ``"auto"`` or 0 to disable
+                                  spilling to host (i.e. allow full device
+                                  memory usage).  [default: 0.8]
+  --rmm-pool-size TEXT            RMM pool size to initialize each worker
+                                  with. Can be an integer (bytes), string
+                                  (like ``"5GB"`` or ``"5000M"``), or ``None``
+                                  to disable RMM pools.
+                                  
+                                  .. note::     This size is a per-worker
+                                  configuration, and not cluster-wide.
+  --rmm-maximum-pool-size TEXT    When ``--rmm-pool-size`` is specified, this
+                                  argument indicates the maximum pool size.
+                                  Can be an integer (bytes), string (like
+                                  ``"5GB"`` or ``"5000M"``) or ``None``. By
+                                  default, the total available memory on the
+                                  GPU is used. ``rmm_pool_size`` must be
+                                  specified to use RMM pool and to set the
+                                  maximum pool size.
+                                  
+                                  .. note::     This size is a per-worker
+                                  configuration, and not cluster-wide.
+  --rmm-managed-memory / --no-rmm-managed-memory
+                                  Initialize each worker with RMM and set it
+                                  to use managed memory. If disabled, RMM may
+                                  still be used by specifying ``--rmm-pool-
+                                  size``.
+                                  
+                                  .. warning::     Managed memory is currently
+                                  incompatible with NVLink. Trying to enable
+                                  both will     result in failure.  [default:
+                                  no-rmm-managed-memory]
+  --rmm-async / --no-rmm-async    Initialize each worker withh RMM and set it
+                                  to use RMM's asynchronous allocator. See
+                                  ``rmm.mr.CudaAsyncMemoryResource`` for more
+                                  info.
+                                  
+                                  .. warning::     The asynchronous allocator
+                                  requires CUDA Toolkit 11.2 or newer. It is
+                                  also     incompatible with RMM pools and
+                                  managed memory, trying to enable both will
+                                  result in failure.  [default: no-rmm-async]
+  --rmm-log-directory TEXT        Directory to write per-worker RMM log files
+                                  to. The client and scheduler are not logged
+                                  here. Can be a string (like
+                                  ``"/path/to/logs/"``) or ``None`` to disable
+                                  logging.
+                                  
+                                  .. note::     Logging will only be enabled
+                                  if ``--rmm-pool-size`` or ``--rmm-managed-
+                                  memory``     are specified.
+  --rmm-track-allocations / --no-rmm-track-allocations
+                                  Track memory allocations made by RMM. If
+                                  ``True``, wraps the memory resource of each
+                                  worker with a
+                                  ``rmm.mr.TrackingResourceAdaptor`` that
+                                  allows querying the amount of memory
+                                  allocated by RMM.  [default: no-rmm-track-
+                                  allocations]
+  --pid-file TEXT                 File to write the process PID.
+  --resources TEXT                Resources for task constraints like ``"GPU=2
+                                  MEM=10e9"``.
+  --dashboard / --no-dashboard    Launch the dashboard.  [default: dashboard]
+  --dashboard-address TEXT        Relative address to serve the dashboard (if
+                                  enabled).  [default: :0]
+  --local-directory TEXT          Path on local machine to store temporary
+                                  files. Can be a string (like
+                                  ``"path/to/files"``) or ``None`` to fall
+                                  back on the value of ``dask.temporary-
+                                  directory`` in the local Dask configuration,
+                                  using the current working directory if this
+                                  is not set.
+  --shared-filesystem / --no-shared-filesystem
+                                  If `--shared-filesystem` is specified,
+                                  inform JIT-Unspill that `local_directory` is
+                                  a shared filesystem available for all
+                                  workers, whereas `--no-shared-filesystem`
+                                  informs it may not assume it's a shared
+                                  filesystem. If neither is specified, JIT-
+                                  Unspill will decide based on the Dask config
+                                  value specified by `"jit-unspill-shared-
+                                  fs"`. Notice, a shared filesystem must
+                                  support the `os.link()` operation.
+  --scheduler-file TEXT           Filename to JSON encoded scheduler
+                                  information. To be used in conjunction with
+                                  the equivalent ``dask-scheduler`` option.
+  --protocol TEXT                 Protocol like tcp, tls, or ucx
+  --interface TEXT                External interface used to connect to the
+                                  scheduler. Usually an ethernet interface is
+                                  used for connection, and not an InfiniBand
+                                  interface (if one is available). Can be a
+                                  string (like ``"eth0"`` for NVLink or
+                                  ``"ib0"`` for InfiniBand) or ``None`` to
+                                  fall back on the default interface.
+  --preload TEXT                  Module that should be loaded by each worker
+                                  process like ``"foo.bar"`` or
+                                  ``"/path/to/foo.py"``.
+  --dashboard-prefix TEXT         Prefix for the dashboard. Can be a string
+                                  (like ...) or ``None`` for no prefix.
+  --tls-ca-file PATH              CA certificate(s) file for TLS (in PEM
+                                  format). Can be a string (like
+                                  ``"path/to/certs"``), or ``None`` for no
+                                  certificate(s).
+  --tls-cert PATH                 Certificate file for TLS (in PEM format).
+                                  Can be a string (like ``"path/to/certs"``),
+                                  or ``None`` for no certificate(s).
+  --tls-key PATH                  Private key file for TLS (in PEM format).
+                                  Can be a string (like ``"path/to/certs"``),
+                                  or ``None`` for no private key.
+  --enable-tcp-over-ucx / --disable-tcp-over-ucx
+                                  Set environment variables to enable TCP over
+                                  UCX, even if InfiniBand and NVLink are not
+                                  supported or disabled.
+  --enable-infiniband / --disable-infiniband
+                                  Set environment variables to enable UCX over
+                                  InfiniBand, implies ``--enable-tcp-over-
+                                  ucx`` when enabled.
+  --enable-nvlink / --disable-nvlink
+                                  Set environment variables to enable UCX over
+                                  NVLink, implies ``--enable-tcp-over-ucx``
+                                  when enabled.
+  --enable-rdmacm / --disable-rdmacm
+                                  Set environment variables to enable UCX RDMA
+                                  connection manager support, requires
+                                  ``--enable-infiniband``.
+  --enable-jit-unspill / --disable-jit-unspill
+                                  Enable just-in-time unspilling. Can be a
+                                  boolean or ``None`` to fall back on the
+                                  value of ``dask.jit-unspill`` in the local
+                                  Dask configuration, disabling unspilling if
+                                  this is not set.
+                                  
+                                  .. note::     This is experimental and
+                                  doesn't support memory spilling to disk. See
+                                  ``proxy_object.ProxyObject`` and
+                                  ``proxify_host_file.ProxifyHostFile`` for
+                                  more     info.
+  --worker-class TEXT             Use a different class than Distributed's
+                                  default (``distributed.Worker``) to spawn
+                                  ``distributed.Nanny``.
+  --pre-import TEXT               Pre-import libraries as a Worker plugin to
+                                  prevent long import times bleeding through
+                                  later Dask operations. Should be a list of
+                                  comma-separated names, such as "cudf,rmm".
+  --multiprocessing-method [spawn|fork|forkserver]
+                                  Method used to start new processes with
+                                  multiprocessing
+  --help                          Show this message and exit.
